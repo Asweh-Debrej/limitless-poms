@@ -1,0 +1,57 @@
+---@meta _
+-- Entry point. Boilerplate from the official Hades2ModTemplate (v0.10.0), minus SJSON and the
+-- *_late files. Unlike the template, the core always loads: god modules rely on its public API,
+-- and `enabled` is checked live inside the hook instead.
+
+---@diagnostic disable-next-line: undefined-global
+local mods = rom.mods
+
+---@module 'LuaENVY-ENVY-auto'
+mods['LuaENVY-ENVY'].auto()
+-- ^ this gives us `public` and `import`, among others
+--	and makes all globals we define private to this plugin.
+---@diagnostic disable: lowercase-global
+
+---@diagnostic disable-next-line: undefined-global
+rom = rom
+---@diagnostic disable-next-line: undefined-global
+_PLUGIN = _PLUGIN
+
+-- get definitions for the game's globals
+---@module 'game'
+game = rom.game
+---@module 'game-import'
+import_as_fallback(game)
+
+---@module 'SGG_Modding-ModUtil'
+modutil = mods['SGG_Modding-ModUtil']
+---@module 'SGG_Modding-Chalk'
+chalk = mods['SGG_Modding-Chalk']
+---@module 'SGG_Modding-ReLoad'
+reload = mods['SGG_Modding-ReLoad']
+
+---@module 'config'
+config = chalk.auto 'config.lua'
+-- ^ this updates our `.cfg` file in the config folder!
+public.config = config -- so other mods can access our config
+
+local function on_ready()
+	-- what to do when we are ready, but not re-do on reload.
+	mod = modutil.mod.Mod.Register(_PLUGIN.guid)
+
+	import 'ready.lua'
+end
+
+local function on_reload()
+	-- what to do when we are ready, but also again on every reload.
+	-- only do things that are safe to run over and over.
+	import 'reload.lua'
+end
+
+-- this allows us to limit certain functions to not be reloaded.
+local loader = reload.auto_multiple()
+
+-- this runs only when modutil and the game's lua is ready
+modutil.once_loaded.game(function()
+	loader.load("early", on_ready, on_reload)
+end)

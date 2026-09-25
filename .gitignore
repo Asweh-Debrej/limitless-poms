@@ -1,0 +1,9 @@
+# Build artifacts created by the Thunderstore CLI
+build/
+
+# Files copied into src/ by the workspace's tools/link.ps1 so r2modman can load a linked package
+packages/*/src/manifest.json
+packages/*/src/icon.png
+packages/*/src/LICENSE
+packages/*/src/README.md
+packages/*/src/CHANGELOG.md
