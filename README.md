@@ -12,6 +12,10 @@ Some boons stop accepting Pom of Power once one of their values hits a hard limi
 | Zeus | Ionic Gain | Magick orb reappearance time stops at **2s**. A Heroic Ionic Gain is maxed at level 6. | Each extra Pom: -25% time, down to 0.2s. A Heroic Ionic Gain maxes at level 14. |
 | Hera | Born Gain | Magick Primed stops at **5**. A Heroic Born Gain is maxed at level 9. | Each extra Pom: -1 Magick Primed, down to 1 (Magick stays a whole number). A Heroic Born Gain maxes at level 13. |
 
+It works with every source of boon levels, not just Pom of Power: Pom Slices (shop and Icarus's Supply Drop), Echo's Pom Pom Pom, Natural Selection, Queen's Ransom, King's Ransom and Bridal Glow. Levels those used to waste on a maxed boon now count.
+
+The game never lets Bridal Glow (or other rarity upgrades) pick a Hephaestus blast boon once its cooldown is 2s or lower. That vanilla rule still applies.
+
 ## What does NOT change
 
 - **Boons that can't be upgraded with Poms in vanilla stay that way.** This covers Legendary and Duo boons and every other fixed boon. The mod only continues scaling that Poms were already doing, and never adds levels to a boon that has none.
