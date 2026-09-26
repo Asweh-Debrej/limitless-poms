@@ -1,23 +1,16 @@
-# Adapted from SGG-Modding/Hades2ModTemplate v0.10.0 for a repository holding several packages.
-# Release order matters (Thunderstore rejects unknown dependency versions):
-#   core  ->  god modules (hephaestus, ...)  ->  all
 name: Release
-run-name: ${{ format('{0} {1} {2}', inputs.is-dry-run && 'Dry-run' || 'Release', inputs.package, inputs.tag) }}
+run-name: ${{ format('{0} {1}', inputs.is-dry-run && 'Dry-run' || 'Release', inputs.tag) }}
 
 on:
   workflow_dispatch:
     inputs:
-      package:
-        description: "Package folder under packages/"
-        type: choice
-        required: true
-        options:
-          - core
-          - hephaestus
-          - all
       tag:
-        description: "Version number (Major.Minor.Patch)"
+        description: "Tag / Version number"
         required: true
+      image-folder-name:
+        description: "Image folder name (for replacing image paths embedded in the README)"
+        required: false
+        default: "images"
       is-dry-run:
         description: "Dry-run (do not publish, only test build)"
         type: boolean
@@ -26,20 +19,17 @@ permissions:
   contents: write # required for pushing to the repository and creating releases
 
 env:
-  package-dir: packages/${{ inputs.package }}
-  git-tag: ${{ inputs.package }}-${{ inputs.tag }}
+  changelog: CHANGELOG.md
+  thunderstore-config: thunderstore.toml
+  build-dir: build
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   release:
-    name: ${{ format('{0} {1} {2}', inputs.is-dry-run && 'Dry-run' || 'Release', inputs.package, inputs.tag) }}
+    name: ${{ format('{0} {1}', inputs.is-dry-run && 'Dry-run' || 'Release', inputs.tag) }}
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/${{ inputs.package }}
     steps:
       - name: Check input tag format
-        working-directory: .
         run: |
           if ! echo "${{ inputs.tag }}" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::error title=Invalid package version number::Version numbers must follow the Major.Minor.Patch format (e.g. 1.45.320)."
@@ -48,26 +38,44 @@ jobs:
 
       - name: Checkout files
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          lfs: true
 
       - name: Rotate unreleased section in changelog
         uses: baynezy/ChangeLogger.Action@6e3ad430f08e13698bb01027a13ba4349b0143cc
         with:
           tag: ${{ inputs.tag }}
-          log-path: ${{ env.package-dir }}/CHANGELOG.md
+          log-path: ${{ env.changelog }}
 
       - name: Rotate version in Thunderstore CLI config
         run: |
-          sed -i 's/versionNumber = ".*"/versionNumber = "${{ inputs.tag }}"/' thunderstore.toml
+          sed -i 's/versionNumber = ".*"/versionNumber = "${{ inputs.tag }}"/' ${{ env.thunderstore-config }}
+
+      - name: Replace relative image paths with absolute paths in README
+        run: |
+          sed -i 's#](\(\./\)\?${{ inputs.image-folder-name }}/#](https://github.com/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}/raw/${{ github.event.repository.default_branch }}/${{ inputs.image-folder-name }}/#g' README.md
 
       - name: Install Thunderstore CLI
         run: dotnet tool install -g tcli
 
+      # Use this action instead of the above in case your mod has soft dependencies. 
+      # More info here: https://sgg-modding.github.io/Hades2ModWiki/docs/creating-mods/first-mod-guide/mod-template#packagerom_soft_deps
+      # - name: Install Thunderstore CLI
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     gh release download 0.3.3-hades2 \
+      #       --repo adi1998/thunderstore-cli \
+      #       --pattern "*linux-x64.tar.gz"
+      #     tar xvf tcli-0.3.3-hades2-linux-x64.tar.gz
+      #     echo "$PWD/tcli-0.3.3-hades2-linux-x64" >> "$GITHUB_PATH"
+
       - name: Build package
         run: |
           tcli build
-          ARTIFACT_NAME=$(find build -type f -printf "%f\n")
+          ARTIFACT_NAME=$(find "${{ env.build-dir }}" -type f -printf "%f\n")
           echo "artifact-name=${ARTIFACT_NAME}" >> "$GITHUB_ENV"
-          echo "artifact-path=${{ env.package-dir }}/build/${ARTIFACT_NAME}" >> "$GITHUB_ENV"
+          echo "artifact-path=${{ env.build-dir }}/${ARTIFACT_NAME}" >> "$GITHUB_ENV"
 
       - name: Upload artifact to workflow
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
@@ -80,26 +88,25 @@ jobs:
         if: ${{ !inputs.is-dry-run }}
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.TCLI_AUTH_TOKEN }}
-        run: tcli publish --file build/${{ env.artifact-name }}
+        run: tcli publish --file ${{ env.artifact-path }}
 
       - name: Tag and push to repository
         if: ${{ !inputs.is-dry-run }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md thunderstore.toml
-          git commit --message "Release ${{ env.git-tag }}"
-          git tag ${{ env.git-tag }} --annotate --message "Release ${{ env.git-tag }}"
+          git add ${{ env.changelog }} ${{ env.thunderstore-config }}
+          git commit --message "Release ${{ inputs.tag }}"
+          git tag ${{ inputs.tag }} --annotate --message "Release ${{ inputs.tag }}"
           git push origin HEAD:${{ github.ref_name }} --tags
 
       - name: Create release and upload artifact
         if: ${{ !inputs.is-dry-run }}
-        working-directory: .
         run: |
           gh release create \
-            '${{ env.git-tag }}' \
+            '${{ inputs.tag }}' \
             '${{ env.artifact-path }}' \
-            --title '${{ env.artifact-name }}' \
+            --title '${{ inputs.tag }}' \
             --repo '${{ github.repository }}' \
             --target '${{ github.ref_name }}' \
             --verify-tag

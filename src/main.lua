@@ -1,7 +1,7 @@
 ---@meta _
 -- Entry point. Boilerplate from the official Hades2ModTemplate (v0.10.0), minus SJSON and the
--- *_late files. Unlike the template, the core always loads: god modules rely on its public API,
--- and `enabled` is checked live inside the hook instead.
+-- *_late files. Unlike the template, the mod always loads: `enabled` (and every per-god setting)
+-- is checked live inside the hook, so toggling it in the config takes effect without a restart.
 
 ---@diagnostic disable-next-line: undefined-global
 local mods = rom.mods

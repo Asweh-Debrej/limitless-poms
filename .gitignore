@@ -1,9 +1,11 @@
-# Build artifacts created by the Thunderstore CLI
-build/
+# For files used only by a symlink/junction to the ReturnOfModding plugins folder
+/src/LICENSE
+/src/icon.png
+/src/manifest.json
+/src/CHANGELOG.md
+/src/README.md
+/src/mm_v2_manifest.json
 
-# Files copied into src/ by the workspace's tools/link.ps1 so r2modman can load a linked package
-packages/*/src/manifest.json
-packages/*/src/icon.png
-packages/*/src/LICENSE
-packages/*/src/README.md
-packages/*/src/CHANGELOG.md
+# For build artifacts created by the Thunderstore CLI
+/build
+tcli.exe
