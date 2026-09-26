@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-26
+
 ### Added
 
 - Pom of Power keeps upgrading boons past their vanilla limit, with diminishing returns:
@@ -16,3 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Works with every source of boon levels: Pom Slices, Echo's Pom Pom Pom, Natural Selection, Queen's Ransom, King's Ransom and Bridal Glow.
 - Config: master switch, `max_extra_levels`, and per god an on/off switch plus its step and minimum. All settings apply live.
 - Boons that can't be upgraded with Poms in vanilla (Legendary, Duo, and other fixed boons) are never made upgradeable.
+
+[unreleased]: https://github.com/Asweh-Debrej/limitless-poms/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/Asweh-Debrej/limitless-poms/compare/64bcd7a1a1637df613cbb4d91a5d95368c435217...0.1.0
